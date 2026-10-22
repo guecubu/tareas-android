@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">Tareas</string>
+    <string name="generic_description">Generic Image Description</string>
 </resources>
