@@ -45,6 +45,15 @@ class TaskDAO(val context: Context) {
         }
     }
 
+    fun save(task: Task) {
+        if (task.id == -1) {
+            insert(task)
+        }
+        else {
+            update(task)
+        }
+    }
+
     fun insert(task: Task) {
         open()
         val values = getContentValues(task)
@@ -72,7 +81,9 @@ class TaskDAO(val context: Context) {
         }
 
         try {
-            val id = db.update(Task.TABLE_NAME, values, "${Task.COLUMN_ID} = ${task.id}", null)
+            val id = db.update(
+                    Task.TABLE_NAME, values, "${Task.COLUMN_ID} = ${task.id}", null
+                              )
             Log.i(LOG_TAG, "Task updated with id $id")
         }
         catch (e: Exception) {
@@ -133,10 +144,9 @@ class TaskDAO(val context: Context) {
         var task: Task? = null
 
         try {
-            val cursor =
-                    db.query(
-                            Task.TABLE_NAME, null, "${Task.COLUMN_ID} = $id", null, null, null, null
-                            )
+            val cursor = db.query(
+                    Task.TABLE_NAME, null, "${Task.COLUMN_ID} = $id", null, null, null, null
+                                 )
             with(cursor) {
                 if (moveToNext()) {
                     task = cursorToEntity(cursor)
