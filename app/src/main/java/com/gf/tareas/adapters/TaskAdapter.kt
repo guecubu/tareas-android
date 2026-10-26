@@ -90,10 +90,13 @@ class TaskAdapter(
         private fun getTaskUrgency(dateStr: String): Urgency {
             if (dateStr.isBlank()) return Urgency.NORMAL
             return try {
-                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                val utcZone = java.util.TimeZone.getTimeZone("UTC")
+                val sdf = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).apply {
+                    timeZone = utcZone
+                }
                 val date = sdf.parse(dateStr) ?: return Urgency.NORMAL
 
-                val taskCalendar = Calendar.getInstance().apply {
+                val taskCalendar = Calendar.getInstance(utcZone).apply {
                     time = date
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
@@ -101,7 +104,8 @@ class TaskAdapter(
                     set(Calendar.MILLISECOND, 0)
                 }
 
-                val todayCalendar = Calendar.getInstance().apply {
+                val todayCalendar = Calendar.getInstance(utcZone).apply {
+                    timeInMillis = System.currentTimeMillis()
                     set(Calendar.HOUR_OF_DAY, 0)
                     set(Calendar.MINUTE, 0)
                     set(Calendar.SECOND, 0)
@@ -113,7 +117,7 @@ class TaskAdapter(
 
                 when {
                     diffDays < 0 -> Urgency.OVERDUE
-                    diffDays == 1L -> Urgency.DUE_TOMORROW
+                    diffDays <= 1L -> Urgency.DUE_TOMORROW
                     else -> Urgency.NORMAL
                 }
             }
