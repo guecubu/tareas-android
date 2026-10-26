@@ -29,6 +29,7 @@ class TaskDAO(val context: Context) {
             put(Task.COLUMN_DATE, task.date)
             put(Task.COLUMN_TIME, task.time)
             put(Task.COLUMN_DONE, task.done)
+            put(Task.COLUMN_CATEGORY_ID, task.categoryId)
         }
     }
 
@@ -40,8 +41,9 @@ class TaskDAO(val context: Context) {
             val date = getString(getColumnIndexOrThrow(Task.COLUMN_DATE))
             val time = getString(getColumnIndexOrThrow(Task.COLUMN_TIME))
             val done = getInt(getColumnIndexOrThrow(Task.COLUMN_DONE)) != 0
+            val categoryId = getInt(getColumnIndexOrThrow(Task.COLUMN_CATEGORY_ID))
 
-            return Task(id, title, description, date, time, done)
+            return Task(id, title, description, date, time, done, categoryId)
         }
     }
 
@@ -78,6 +80,7 @@ class TaskDAO(val context: Context) {
             put(Task.COLUMN_DATE, task.date)
             put(Task.COLUMN_TIME, task.time)
             put(Task.COLUMN_DONE, task.done)
+            put(Task.COLUMN_CATEGORY_ID, task.categoryId)
         }
 
         try {

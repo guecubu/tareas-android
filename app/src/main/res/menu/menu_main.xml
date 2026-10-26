@@ -5,5 +5,13 @@
         android:id="@+id/action_order"
         android:icon="@drawable/ic_sort"
         android:title="@string/order_button"
-        app:showAsAction="always" />
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_group_categories"
+        android:title="@string/group_by_category"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/action_toggle_completed"
+        android:title="@string/show_completed_tasks"
+        app:showAsAction="ifRoom" />
 </menu>

@@ -5,12 +5,14 @@ import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.LayerDrawable
 import android.util.TypedValue
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.gf.tareas.R
+import com.gf.tareas.data.Category
 import com.gf.tareas.data.Task
 import com.gf.tareas.databinding.ItemTaskBinding
 import java.text.SimpleDateFormat
@@ -24,6 +26,18 @@ class TaskAdapter(
         private val onItemDelete: (task: Task) -> Unit
                  ) : ListAdapter<Task, TaskAdapter.TaskViewHolder>(TaskDiffCallback()) {
 
+    private var categoriesById = emptyMap<Int, Category>()
+    private var groupedByCategory = false
+
+    fun setCategoryGrouping(grouped: Boolean, categories: List<Category>) {
+        groupedByCategory = grouped
+        categoriesById = categories.associateBy { it.id }
+    }
+
+    fun refreshCategoryHeaders() {
+        notifyItemRangeChanged(0, itemCount)
+    }
+
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TaskViewHolder {
         val binding = ItemTaskBinding.inflate(LayoutInflater.from(parent.context), parent, false)
         return TaskViewHolder(binding)
@@ -31,7 +45,10 @@ class TaskAdapter(
 
     override fun onBindViewHolder(holder: TaskViewHolder, position: Int) {
         val task = getItem(position)
-        holder.bind(task.copy())
+        val category = categoriesById[task.categoryId]
+        val showCategory = groupedByCategory &&
+                (position == 0 || getItem(position - 1).categoryId != task.categoryId)
+        holder.bind(task.copy(), category, showCategory)
 
         holder.itemView.setOnClickListener {
             onItemClick(task)
@@ -54,28 +71,33 @@ class TaskAdapter(
 
     class TaskViewHolder(val binding: ItemTaskBinding) : RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(task: Task) {
+        fun bind(task: Task, category: Category?, showCategory: Boolean) {
+            binding.categoryHeaderTextView.visibility = if (showCategory) View.VISIBLE else View.GONE
+            if (showCategory) {
+                binding.categoryHeaderTextView.text = category?.name ?: binding.root.context.getString(R.string.uncategorized)
+                binding.categoryHeaderTextView.setBackgroundColor(category?.color ?: Color.TRANSPARENT)
+            }
             binding.titleTextView.text = task.title
             binding.doneCheckBox.isChecked = task.done
 
             val context = binding.root.context
             val urgency = if (task.done) Urgency.NORMAL else getTaskUrgency(task.date)
 
-            val backgroundColor = when (urgency) {
+            val urgencyColor = when (urgency) {
                 Urgency.OVERDUE -> ContextCompat.getColor(context, R.color.pastel_red)
                 Urgency.DUE_TOMORROW -> ContextCompat.getColor(context, R.color.pastel_yellow)
                 Urgency.NORMAL -> Color.TRANSPARENT
             }
 
-            if (urgency == Urgency.NORMAL) {
+            if (urgencyColor == Color.TRANSPARENT) {
                 val typedValue = TypedValue()
                 context.theme.resolveAttribute(
                         android.R.attr.selectableItemBackground, typedValue, true
                                               )
-                binding.root.setBackgroundResource(typedValue.resourceId)
+                binding.taskContentLayout.setBackgroundResource(typedValue.resourceId)
             }
             else {
-                val colorDrawable = ColorDrawable(backgroundColor)
+                val colorDrawable = ColorDrawable(urgencyColor)
                 val typedValue = TypedValue()
                 context.theme.resolveAttribute(
                         android.R.attr.selectableItemBackground, typedValue, true
@@ -83,7 +105,7 @@ class TaskAdapter(
                 val rippleDrawable = ContextCompat.getDrawable(context, typedValue.resourceId)
 
                 val layerDrawable = LayerDrawable(arrayOf(colorDrawable, rippleDrawable))
-                binding.root.background = layerDrawable
+                binding.taskContentLayout.background = layerDrawable
             }
         }
 
@@ -141,6 +163,7 @@ class TaskAdapter(
                 oldItem.title != newItem.title -> false
                 oldItem.done != newItem.done -> false
                 oldItem.date != newItem.date -> false
+                oldItem.categoryId != newItem.categoryId -> false
                 else -> true
             }
         }

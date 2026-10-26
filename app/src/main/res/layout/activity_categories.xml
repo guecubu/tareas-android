@@ -58,16 +58,27 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/appBarLayout" />
 
-    <TextView
-        android:id="@+id/placeholderTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/title_categories"
-        android:textAppearance="?attr/textAppearanceTitleLarge"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categoriesRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:padding="12dp"
         app:layout_constraintBottom_toTopOf="@id/bottomBarDivider"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/topBarDivider" />
+        app:layout_constraintTop_toBottomOf="@id/topBarDivider"
+        tools:listitem="@layout/item_category" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/addCategoryButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="20dp"
+        android:contentDescription="@string/add_category"
+        app:srcCompat="@drawable/ic_add_task"
+        app:layout_constraintBottom_toTopOf="@id/bottomBarDivider"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <com.google.android.material.divider.MaterialDivider
         android:id="@+id/bottomBarDivider"

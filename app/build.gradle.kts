@@ -46,4 +46,5 @@ dependencies {
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
     implementation(libs.androidx.splashscreen)
+    implementation("com.github.skydoves:colorpickerview:2.4.0")
 }

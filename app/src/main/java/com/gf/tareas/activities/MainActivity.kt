@@ -1,8 +1,15 @@
 package com.gf.tareas.activities
 
 import android.os.Bundle
+import android.graphics.drawable.GradientDrawable
+import android.view.Gravity
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
+import android.widget.ArrayAdapter
+import android.widget.LinearLayout
+import android.widget.TextView
+import android.util.TypedValue
 import androidx.activity.enableEdgeToEdge
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.getColor
@@ -14,7 +21,10 @@ import com.gf.tareas.R
 import com.gf.tareas.adapters.TaskAdapter
 import com.gf.tareas.data.Task
 import com.gf.tareas.data.TaskDAO
+import com.gf.tareas.data.CategoryDAO
+import com.gf.tareas.data.Category
 import com.gf.tareas.databinding.ActivityMainBinding
+import com.gf.tareas.databinding.DialogTaskDetailsBinding
 import com.gf.tareas.databinding.DialogTaskBinding
 import com.gf.tareas.utils.SampleDataSeeder
 import com.google.android.material.datepicker.MaterialDatePicker
@@ -34,6 +44,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var taskDAO: TaskDAO
     private lateinit var adapter: TaskAdapter
     private var tasks = listOf<Task>()
+    private var categories = emptyList<Category>()
+    private var groupedByCategory = false
+    private var hideCompletedTasks = true
     private var sortCriteria = SortCriteria.DATE
 
     private enum class SortCriteria {
@@ -66,6 +79,9 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.menu_main, menu)
+        menu?.findItem(R.id.action_toggle_completed)?.setTitle(
+                if (hideCompletedTasks) R.string.show_completed_tasks else R.string.hide_completed_tasks
+        )
         return true
     }
 
@@ -73,6 +89,18 @@ class MainActivity : AppCompatActivity() {
         return when (item.itemId) {
             R.id.action_order -> {
                 showSortDialog()
+                true
+            }
+            R.id.action_group_categories -> {
+                groupedByCategory = !groupedByCategory
+                item.setTitle(if (groupedByCategory) R.string.ungroup_categories else R.string.group_by_category)
+                applySort()
+                true
+            }
+            R.id.action_toggle_completed -> {
+                hideCompletedTasks = !hideCompletedTasks
+                item.setTitle(if (hideCompletedTasks) R.string.show_completed_tasks else R.string.hide_completed_tasks)
+                applySort()
                 true
             }
 
@@ -120,21 +148,32 @@ class MainActivity : AppCompatActivity() {
     private fun reloadData() {
         SampleDataSeeder.seedIfEmpty(taskDAO)
         tasks = taskDAO.findAll()
+        categories = CategoryDAO(this).findAll()
         applySort()
     }
 
     private fun applySort() {
+        val visibleTasks = if (hideCompletedTasks) tasks.filterNot { it.done } else tasks
         val sortedTasks = when (sortCriteria) {
-            SortCriteria.DATE -> tasks.sortedBy { parseDate(it.date) }
-            SortCriteria.CREATION -> tasks.sortedBy { it.id }
-            SortCriteria.TITLE -> tasks.sortedBy { it.title.lowercase() }
-            SortCriteria.STATUS -> tasks.sortedWith(
+            SortCriteria.DATE -> visibleTasks.sortedBy { parseDate(it.date) }
+            SortCriteria.CREATION -> visibleTasks.sortedBy { it.id }
+            SortCriteria.TITLE -> visibleTasks.sortedBy { it.title.lowercase() }
+            SortCriteria.STATUS -> visibleTasks.sortedWith(
                     compareBy<Task> { if (it.done) 1 else 0 }
                             .thenBy { parseDate(it.date) }
                                                    )
         }
-        adapter.submitList(sortedTasks)
+        val displayTasks = if (groupedByCategory) {
+            val categoryOrder = categories.withIndex().associate { it.value.id to it.index }
+            sortedTasks.sortedBy { categoryOrder[it.categoryId] ?: Int.MAX_VALUE }
+        }
+        else sortedTasks
+        adapter.setCategoryGrouping(groupedByCategory, categories)
+        adapter.submitList(displayTasks) {
+            adapter.refreshCategoryHeaders()
+        }
     }
+
 
     private fun parseDate(dateStr: String): Long {
         if (dateStr.isBlank()) return Long.MAX_VALUE
@@ -185,7 +224,26 @@ class MainActivity : AppCompatActivity() {
 
     //region Task Item Actions (Adapter Callbacks)
     private fun onItemClick(task: Task) {
-        onItemCheck(task)
+        showTaskDetailsDialog(task)
+    }
+
+    private fun showTaskDetailsDialog(task: Task) {
+        val details = DialogTaskDetailsBinding.inflate(layoutInflater)
+        val category = categories.firstOrNull { it.id == task.categoryId }
+        details.taskDetailsTitle.text = task.title
+        details.taskDetailsDescription.text = task.description.ifBlank { getString(R.string.no_description) }
+        details.taskDetailsDate.text = task.date.ifBlank { getString(R.string.not_set) }
+        details.taskDetailsTime.text = task.time.ifBlank { getString(R.string.not_set) }
+        details.taskDetailsCategory.text = category?.name ?: getString(R.string.uncategorized)
+        details.taskDetailsCategory.setBackgroundColor(category?.color ?: android.graphics.Color.TRANSPARENT)
+
+        MaterialAlertDialogBuilder(this)
+                .setView(details.root)
+                .setNegativeButton(R.string.close) { dialog, _ -> dialog.dismiss() }
+                .setPositiveButton(if (task.done) R.string.uncompleted_task else R.string.complete_task) { _, _ ->
+                    onItemCheck(task)
+                }
+                .show()
     }
 
     private fun onItemCheck(task: Task) {
@@ -199,13 +257,13 @@ class MainActivity : AppCompatActivity() {
 
     private fun onItemDelete(task: Task) {
         MaterialAlertDialogBuilder(this)
-                .setTitle("Eliminar tarea")
-                .setMessage("¿Estás seguro de que quieres eliminar esta tarea?")
-                .setPositiveButton("Borrar") { _, _ ->
+                .setTitle(R.string.delete_task_title)
+                .setMessage(R.string.delete_task_message)
+                .setPositiveButton(R.string.delete) { _, _ ->
                     taskDAO.delete(task)
                     reloadData()
                 }
-                .setNegativeButton("Cancelar") { dialog, _ ->
+                .setNegativeButton(R.string.cancel) { dialog, _ ->
                     dialog.dismiss()
                 }
                 .setCancelable(false)
@@ -216,10 +274,52 @@ class MainActivity : AppCompatActivity() {
     //region Dialogs & Pickers
     private fun showAddTaskDialog(task: Task) {
         val isCreate = task.id == -1
-        val title = if (isCreate) "Nueva tarea" else "Editar tarea"
-        val positiveButton = if (isCreate) "Crear" else "Guardar"
+        val title = if (isCreate) getString(R.string.new_task) else getString(R.string.edit_task)
+        val positiveButton = if (isCreate) getString(R.string.create) else getString(R.string.save)
 
         val bindingDialog = DialogTaskBinding.inflate(layoutInflater)
+        val availableCategories = CategoryDAO(this).findAll()
+        fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
+        var selectedCategoryId = task.categoryId
+        val selectedCategoryIndex = availableCategories.indexOfFirst { it.id == selectedCategoryId }
+                .takeIf { it >= 0 } ?: 0
+        bindingDialog.categoryAutoCompleteTextView.setAdapter(
+                object : ArrayAdapter<String>(this, android.R.layout.simple_dropdown_item_1line, availableCategories.map { it.name }) {
+                    override fun getView(position: Int, convertView: View?, parent: android.view.ViewGroup): View =
+                            createCategoryRow(position, convertView, false)
+
+                    override fun getDropDownView(position: Int, convertView: View?, parent: android.view.ViewGroup): View =
+                            createCategoryRow(position, convertView, true)
+
+                    private fun createCategoryRow(position: Int, convertView: View?, isDropDown: Boolean): View {
+                        val category = availableCategories[position]
+                        val row = convertView as? LinearLayout ?: LinearLayout(this@MainActivity).apply {
+                            orientation = LinearLayout.HORIZONTAL
+                            gravity = Gravity.CENTER_VERTICAL
+                            setPadding(dp(16), dp(if (isDropDown) 12 else 0), dp(16), dp(if (isDropDown) 12 else 0))
+                            addView(View(this@MainActivity), LinearLayout.LayoutParams(dp(12), dp(12)).apply {
+                                setMargins(0, 0, dp(12), 0)
+                            })
+                            addView(TextView(this@MainActivity).apply {
+                                textSize = 16f
+                            })
+                        }
+                        row.getChildAt(0).background = GradientDrawable().apply {
+                            shape = GradientDrawable.OVAL
+                            setColor(category.color)
+                        }
+                        (row.getChildAt(1) as TextView).text = category.name
+                        return row
+                    }
+                }
+        )
+        bindingDialog.categoryAutoCompleteTextView.setOnItemClickListener { _, _, position, _ ->
+            selectedCategoryId = availableCategories[position].id
+        }
+        if (availableCategories.isNotEmpty()) {
+            bindingDialog.categoryAutoCompleteTextView.setText(availableCategories[selectedCategoryIndex].name, false)
+            selectedCategoryId = availableCategories[selectedCategoryIndex].id
+        }
 
         if (!isCreate) {
             bindingDialog.titleEditText.setText(task.title)
@@ -240,7 +340,7 @@ class MainActivity : AppCompatActivity() {
                 .setView(bindingDialog.root)
                 .setTitle(title)
                 .setPositiveButton(positiveButton) { _, _ ->
-                    addNewTask(task, bindingDialog)
+                    addNewTask(task, bindingDialog, selectedCategoryId)
                 }
                 .setNegativeButton("Cancelar") { dialog, _ ->
                     dialog.dismiss()
@@ -249,11 +349,12 @@ class MainActivity : AppCompatActivity() {
                 .show()
     }
 
-    private fun addNewTask(task: Task, bindingDialog: DialogTaskBinding) {
+    private fun addNewTask(task: Task, bindingDialog: DialogTaskBinding, selectedCategoryId: Int) {
         task.title = bindingDialog.titleEditText.text?.toString() ?: ""
         task.description = bindingDialog.descriptionEditText.text?.toString() ?: ""
         task.date = bindingDialog.dateEditText.text?.toString() ?: ""
         task.time = bindingDialog.timeEditText.text?.toString() ?: ""
+        task.categoryId = selectedCategoryId
 
         taskDAO.save(task)
         reloadData()

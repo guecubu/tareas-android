@@ -6,8 +6,29 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="?attr/selectableItemBackground"
     android:gravity="center_vertical"
-    android:orientation="horizontal"
-    android:padding="12dp">
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/categoryHeaderTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        android:paddingBottom="8dp"
+        android:textAppearance="?attr/textAppearanceTitleSmall"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:text="Personal" />
+
+    <LinearLayout
+        android:id="@+id/taskContentLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp">
 
     <CheckBox
         android:id="@+id/doneCheckBox"
@@ -45,5 +66,6 @@
             app:icon="@drawable/ic_delete"
             app:iconTint="@color/design_default_color_error" />
 
+    </LinearLayout>
     </LinearLayout>
 </LinearLayout>

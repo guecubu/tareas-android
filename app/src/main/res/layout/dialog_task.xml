@@ -14,7 +14,23 @@
             android:id="@+id/titleEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="¿Que hay que hacer...?" />
+            android:hint="@string/task_title_hint" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="8dp"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.ExposedDropdownMenu">
+
+        <com.google.android.material.textfield.MaterialAutoCompleteTextView
+            android:id="@+id/categoryAutoCompleteTextView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clickable="true"
+            android:focusable="false"
+            android:hint="@string/category" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -27,7 +43,7 @@
             android:id="@+id/descriptionEditText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Descripción detallada de la tarea" />
+            android:hint="@string/task_description_hint" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -42,7 +58,7 @@
             android:layout_height="wrap_content"
             android:clickable="true"
             android:focusable="false"
-            android:hint="Fecha de vencimiento" />
+            android:hint="@string/task_due_date_hint" />
 
     </com.google.android.material.textfield.TextInputLayout>
 
@@ -56,7 +72,7 @@
             android:layout_height="wrap_content"
             android:clickable="true"
             android:focusable="false"
-            android:hint="Hora de vencimiento" />
+            android:hint="@string/task_due_time_hint" />
 
     </com.google.android.material.textfield.TextInputLayout>
 </LinearLayout>
