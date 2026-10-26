@@ -2,7 +2,12 @@
     <!-- Base application theme. -->
     <style name="Base.Theme.Tareas" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <!-- Tema de arranque / Splash (Fondo Amarillo) -->
+    <style name="Theme.Tareas.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ic_launcher_background</item>
+        <item name="postSplashScreenTheme">@style/Theme.Tareas</item>
     </style>
 
     <style name="Theme.Tareas" parent="Base.Theme.Tareas" />

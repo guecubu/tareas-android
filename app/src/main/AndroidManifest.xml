@@ -12,6 +12,7 @@
         android:theme="@style/Theme.Tareas">
         <activity
             android:name=".activities.MainActivity"
+            android:theme="@style/Theme.Tareas.Starting"
             android:exported="true"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
@@ -20,6 +21,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".activities.CategoriesActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

@@ -1,4 +1,13 @@
 <resources>
     <string name="app_name">Tareas</string>
     <string name="generic_description">Generic Image Description</string>
+    <string name="order_button">Ordenar</string>
+    <string name="sort_dialog_title">Ordenar tareas</string>
+    <string name="sort_date">Por Fecha de Vencimiento (Más cercanas)</string>
+    <string name="sort_creation">Por Orden de Creación</string>
+    <string name="sort_title">Por Título (A-Z)</string>
+    <string name="sort_status">Por Estado (Pendientes primero)</string>
+    <string name="cancel">Cancelar</string>
+    <string name="title_tasks">Tareas</string>
+    <string name="title_categories">Categorías</string>
 </resources>
