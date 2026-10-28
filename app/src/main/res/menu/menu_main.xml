@@ -9,9 +9,9 @@
     <item
         android:id="@+id/action_group_categories"
         android:title="@string/group_by_category"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
     <item
         android:id="@+id/action_toggle_completed"
         android:title="@string/show_completed_tasks"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
 </menu>
